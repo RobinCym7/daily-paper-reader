@@ -1,0 +1,727 @@
+Title: Beyond Patches: Superpixel Token-based Transformers for Attribute-Specific Fashion Retrieval
+
+URL Source: https://arxiv.org/pdf/2606.10697v1
+
+Published Time: Wed, 10 Jun 2026 00:53:42 GMT
+
+Number of Pages: 10
+
+Markdown Content:
+# Beyond Patches: Superpixel Token-based Transformers for Attribute-Specific Fashion Retrieval 
+
+# Shuili Zhang ∗
+
+# Hongzhang Mu ∗
+
+Institute of Information Engineering, Chinese Academy of Sciences School of Cyber Security, UCAS ‡
+
+Beijing, China zhangshuili@iie.ac.cn muhongzhang@iie.ac.cn 
+
+# Wenyuan Zhang 
+
+Institute of Information Engineering, Chinese Academy of Sciences School of Cyber Security, UCAS ‡
+
+Beijing, China zhangwenyuan@iie.ac.cn 
+
+# Duohe Ma †
+
+# Tingwen Liu †
+
+Institute of Information Engineering, Chinese Academy of Sciences School of Cyber Security, UCAS ‡
+
+Beijing, China maduohe@iie.ac.cn liutingwen@iie.ac.cn 
+
+## Abstract 
+
+Attribute-Specific Fashion Retrieval (ASFR) aims to improve fine-grained image retrieval by focusing on specific attributes. However, existing patch-based attention and Transformer methods often mis-align with irregular attribute regions and are prone to background noise, limiting their ability to capture subtle, pixel-level microstruc-tures. To tackle these challenges, we propose Super Fashion ., the first ASFR framework that adopts superpixel tokens within a Trans-former architecture. Super Fashion initially employs an attribute-guided attention mechanism to extract attribute-related features, which in turn guide the cropping of semantically meaningful image regions. Superpixel segmentation is then leveraged on these regions to generate compact, semantically coherent superpixel tokens. By incorporating modality-specific embeddings for both attribute and superpixel tokens, the superpixel token-based Transformer facili-tates adaptive interaction and fusion, thereby enhancing attribute localization and discrimination. Extensive experiments on Fash-ionAI, DARN, and DeepFashion demonstrate relative overall MAP improvements of 1.84% , 9.27% , and 9.35% over prior SOTA. Su-per Fashion offers a new solution for web-based image retrieval. 
+
+## CCS Concepts 
+
+• Information systems → Information retrieval ; Specialized information retrieval .
+
+## Keywords 
+
+Web-Based Fashion Image Search, Attribute-Specific Fashion Re-trieval, Text-Image Retrieval, Contrastive Learning 
+
+ACM Reference Format: 
+
+Shuili Zhang, Hongzhang Mu, Wenyuan Zhang, Duohe Ma, and Tingwen Liu. 2026. Beyond Patches: Superpixel Token-based Transformers for Attribute-Specific Fashion Retrieval. In Proceedings of the ACM Web Conference 2026  
+
+> ∗Equal contribution.
+> †Corresponding author.
+> ‡University of Chinese Academy of Sciences.
+> This work is licensed under a Creative Commons Attribution 4.0 International License.
+> WWW ’26, Dubai, United Arab Emirates
+> ©2026 Copyright held by the owner/author(s). ACM ISBN 979-8-4007-2307-0/2026/04 https://doi.org/10.1145/3774904.3792094 … …
+
+patch tokens 
+
+superpixel tokens 
+
+Figure 1: Comparison of patch tokens and superpixel tokens for images with the same attribute: tokenization effects. 
+
+(WWW ’26), April 13–17, 2026, Dubai, United Arab Emirates. ACM, New York, NY, USA, 10 pages. https://doi.org/10.1145/3774904.3792094 
+
+## 1 Introduction 
+
+Fashion image retrieval [ 4, 27 ] is a pivotal task in modern Web appli-cations, particularly in the fashion domain, where users demand pre-cise, highly attribute-aware search capabilities. However, conven-tional retrieval systems often rely on global visual similarity, which struggles to capture fine-grained attribute variations essential for fulfilling user intent (e.g., retrieving dresses with a specific neck-line design). To address this, Attribute-Specific Fashion Retrieval (ASFR) has emerged as a paradigm that prioritizes precise attribute-level alignment over coarse global matching [ 6, 8, 18 , 21 , 25 , 28 ]. The demand for ASFR is especially high in web-based fashion ap-plications and online shopping, as attribute-based retrieval [ 40 ]helps users quickly find items with specific features, such as a red handbag with chain straps, greatly improving product discoverabil-ity and streamlining the shopping experience. Likewise, in fashion communities and social platforms, ASFR empowers users to explore  
+
+> arXiv:2606.10697v1 [cs.IR] 9 Jun 2026 WWW ’26, April 13–17, 2026, Dubai, United Arab Emirates Shuili Zhang, Hongzhang Mu, Wenyuan Zhang, Duohe Ma, & Tingwen Liu
+
+style variations or identify items with targeted attributes, fostering engagement and creative inspiration. Beyond enhancing retrieval accuracy, ASFR supports interpretable, user-controllable search experiences, aligning with the increasing focus on transparency and personalization in Web-scale systems [13, 14, 30]. The core challenge of the ASFR task lies in accurately localizing attribute-aware features within images according to the specified attribute, and retrieving semantically visually diverse items that consistently manifest these characteristics. This is inherently dif-ficult because attribute-specific cues vary substantially in form: attributes such as neckline design or sleeve length are con-fined to small, irregular regions, whereas others, such as fabric 
+
+or texture , are distributed heterogeneously and may appear as fragmented, or subtle patterns across the image. To tackle these challenges, recent studies have explored attribute-guided atten-tion mechanisms, designed to emphasize attribute-related regions and suppress irrelevant context [ 5 , 21 , 31 , 35 , 36 ]. Extending these studies, more recent approaches incorporate iterative attention refinement and attribute-aware transformers, thereby facilitating richer feature interactions and improving performance [6]. Despite recent progress, existing studies still suffer from signifi-cant limitations that substantially constrain fine-grained retrieval. As shown in Figure 1, patch-level attention mechanisms operate on uniformly partitioned image grids, which are inherently mis-aligned with the irregular shapes and diverse scales of attribute regions. This coarse partitioning prevents accurate modeling of subtle, pixel-level structures crucial for attribute discrimination. Moreover, patch-based regions frequently encompass irrelevant background content, introducing considerable noise and thereby diluting the distinctiveness of attribute-specific features. These deficiencies underscore a fundamental and persistent gap in cur-rent methods and highlight the urgent need for more adaptive and fine-grained solutions to achieve precise attribute localization. Inspired by superpixel theory, we propose a novel framework, 
+
+Super Fashion , to address the inherent limitations of patch-based approaches. Notably, unlike conventional patch tokens, which suf-fer from rigid partitioning and susceptibility to background noise, 
+
+Super Fashion explicitly introduces superpixel-level tokens that naturally align with irregular attribute regions and preserve fine-grained structures. Specifically, the framework first employs an attribute-guided attention mechanism to extract attribute-related features. These features guide the cropping of image regions, ensur-ing that subsequent superpixel segmentation focuses on meaningful content. The cropped regions are processed through a screening structure to generate compact and semantically coherent superpixel tokens. The superpixel tokens and attribute tokens are individu-ally augmented with modality-specific embeddings before being fed into the Transformer, enabling adaptive interaction and fusion while enhancing both attribute localization and discrimination. In summary, the main contributions are summarized as follows: 
+
+• We propose a new approach for ASFR using superpixel to-kens, effectively addressing misalignment and background noise while capturing fine-grained attribute structures. 
+
+• We present Super Fashion, the first framework to ingeniously generate superpixel tokens in a Transformer architecture for discriminative attribute-aware representations. 
+
+• Extensive experiments on FashionAI, DARN, and DeepFash-ion demonstrate relative MAP improvements of 1.84% , 9.27% ,and 9.35% over state-of-the-art baseline models. 
+
+## 2 Related Work 2.1 Attribute-Specific Fashion Retrieval 
+
+In recent years, attribute-specific fashion retrieval has received growing attention in both academia and industry [ 9 , 13 , 31 , 36 ]. Early methods focused on extracting attribute-relevant regions via attention mechanisms. For example, CSNs [ 30 ] employed fixed masks to select attribute-specific embedding dimensions from global features, enabling fine-grained similarity measurement. ASEN [ 21 ]further introduced Attribute-aware Spatial Attention (ASA) and Attribute-aware Channel Attention (ACA) to jointly learn multiple attribute embeddings in an end-to-end manner. Subsequent studies extended these mechanisms, including hierarchical attribute em-beddings [ 35 ] and parallel ASA/ACA modules [ 31 ], yet the coarse segmentation inherent in these region-based methods often intro-duces background noise and limits localization precision. To im-prove granularity, patch-based strategies were proposed. Dong et al. [ 5] extracted patch-level features through repeated applications of ASA and ACA, while RPF [6] combined attention-guided patch extraction with Transformer architectures for enhanced attribute localization. Despite reducing noise, these approaches rely on fixed patch partitions, restricting adaptability to diverse attribute shapes and scales and resulting in imprecise boundaries and incomplete feature capture. Recent advances have incorporated complementary techniques such as contrastive learning and knowledge distillation. Methods leveraging weak geometric distortion constraints [ 33 ] or relational knowledge distillation [ 32 ] have achieved notable per-formance gains and enhanced industrial applicability. In summary, while patch-level attention improves attribute-related retrieval, its coarse, grid-based partitioning remains misaligned with irregular attribute regions, limiting fine modeling and introducing back-ground noise. These challenges highlight the need for adaptive and semantically coherent tokenization strategies, which we address. 
+
+## 2.2 Visual Tokenization 
+
+Most vision Transformer variants have focused on enhancing back-bone architectures and attention mechanisms based on square im-age patches. Recently, research focus has shifted toward more ad-vanced tokenization strategies that adapt dynamically to image content. For instance, Quadformer [ 22 ] and MSViT [ 11 ] introduce adaptive tokenization schemes that dynamically adjust token resolu-tion according to local image structures. SPiT [ 1 ] applies superpixel-based tokenization; however, its primary focus is interpretability rather than performance improvement, and its conversion of su-perpixels into square patches can distort object structures. Other approaches, such as VCT [ 37 ], decompose images into unsuper-vised, disentangled visual concept tokens, while ViTok [ 10 ] employs autoencoding for latent tokenization in image and video generation, and TexTok [ 39 ] constrains tokenization to descriptive captions to facilitate semantic learning. SuiT [ 17 ] introduces a superpixel-based tokenization method that replaces fixed grid patches in ViTs with adaptive superpixel tokens. Despite these recent advances, existing tokenization strategies for general vision tasks have not yet been Beyond Patches: Superpixel Token-based Transformers for Attribute-Specific Fashion Retrieval WWW ’26, April 13–17, 2026, Dubai, United Arab Emirates Positive Image 𝐟 A            
+
+> 𝑖 +Image 𝐟 A
+> 𝑖 Negative Image 𝐟 A
+> 𝑖 −
+> Positive Image 𝐟 T
+> 𝑖 +Image 𝐟 T
+> 𝑖 Negative Image 𝐟 T
+> 𝑖 −
+
+𝐟 𝒂  𝐞 𝒂       
+
+> Input Attribute 𝒂 neckline
+> design Input Image 𝑰
+
+𝐟 A 
+
+> push pull
+
+Contrastive Learning Attribute -aware Representation                            
+
+> Triplet Loss
+> Cross -InfoNCE Loss
+> 𝓛 𝐀 =𝐓𝐫𝐢𝐩𝐥𝐞𝐭 _𝐥𝐨𝐬𝐬 (𝐟 A
+> 𝒊 ,𝐟 A
+> 𝒊 +,𝐟 A
+> 𝒊 −)
+> 𝓛 𝐓 =𝐓𝐫𝐢𝐩𝐥𝐞𝐭 _𝐥𝐨𝐬𝐬 (𝐟 T
+> 𝒊 ,𝐟 T
+> 𝒊 +,𝐟 T
+> 𝒊 −)
+> 𝓛 𝐀𝐓 =𝐈𝐧𝐟𝐨𝐍𝐂𝐄 _𝐥𝐨𝐬𝐬 (𝐟 T
+> 𝒊 ,𝐟 A
+> 𝒊 ,𝓟 ,𝓝 )
+> Image 𝐟 A
+> 𝑖
+> Image 𝐟 T
+> 𝑖
+> ……
+> Positive Set 𝒫 Negative Set 𝒩
+> Attribute -guided
+> Attention MLP
+> Image
+> Encoding Project
+> Positional Encoding
+> Superpixel
+> Generation Average
+> Pooling
+> Max
+> Pooling
+> Attribute
+> Encoding
+> Superpixel
+> Token -based
+> Transformer
+> FC
+> MLP
+
+𝐟 𝒔  𝐞 𝒔  𝐟 T
+
+> Q
+> K
+> V
+> Feature
+> Selection
+> …
+> …
+
+Figure 2: An overview of the proposed framework Super Fashion, the two representations fA, fT are used together for inference. 
+
+systematically applied to ASFR tasks. In this paper, we specifically leverage carefully designed superpixel-based tokenization to en-able precise attribute-aware partitioning, producing compact and semantically coherent tokens that effectively capture fine-grained, localized semantic regions, which are critical for achieving accurate and robust web-based attribute-specific fashion image retrieval. 
+
+## 2.3 Superpixel Generation 
+
+A superpixel is a cluster of homogeneous pixels defined by char-acteristics such as color, brightness, or texture [ 3]. As an over-segmentation technique, superpixels aggregate pixels into percep-tually meaningful and semantically coherent regions, and they are widely used in computer vision applications [15]. Recent research has increasingly focused on improving boundary adherence, scal-ability, and adaptability for a variety of tasks, including semantic segmentation and object detection [ 24 , 38 , 41 ]. Unsupervised and weakly supervised approaches aim to significantly reduce reliance on labeled data [ 16 ], while deep learning, including CNNs and Transformer-based models, has been increasingly employed for adaptive, content-aware superpixel generation [ 19 , 23 ]. Compu-tational efficiency remains a key consideration, motivating light-weight and highly efficient designs suitable for real-time appli-cations on resource-constrained devices [ 7 , 23 , 34 ]. Nonetheless, classical methods such as SLIC [ 2] and FastSLIC [ 24 ] remain widely used owing to their simplicity, speed, and consistent quality. 
+
+## 3 Methodology 3.1 Overview of Super Fashion Framework 
+
+As illustrated in Figure 2, Super Fashion operates through three key stages. First, it generates superpixel tokens by using attribute-guided attention to extract features fA for region cropping, then applies superpixel segmentation and aggregation to create semanti-cally coherent tokens. Second, these tokens are processed through a superpixel token-based Transformer, producing refined repre-sentations fT via an MLP. Finally, triplet loss and cross-InfoNCE loss are employed for contrastive learning, where the latter enables interactive learning between fA and fT to enhance joint inference. 
+
+## 3.2 Superpixel Tokenization 
+
+3.2.1 Feature Extraction and Selection. We first extract features from the input image 𝐼 using a convolutional block, resulting in a feature map foI ∈ R𝐶 ×𝐻 ×𝑊 . In parallel, the input attribute 𝑎 is encoded into an embedding vector fo 
+
+> 𝑎
+
+∈ R𝐴 through an attribute encoding module. To facilitate cross-modal interaction, both image features and attribute embeddings are projected into a shared latent space: image features are transformed via a 1×1 convolutional layer, while attribute embeddings are processed with a fully connected (FC) layer. A subsequent tanh activation then yields the projected representations fo′ 
+
+> I
+
+∈ R𝐶 ′ ×𝐻 ′ ×𝑊 ′
+
+and fo′ 
+
+> 𝑎
+
+∈ R𝐶 ′
+
+. To improve effi-ciency and focus on semantically relevant regions, we introduce an attribute-guided attention mechanism. This mechanism selec-tively emphasizes attribute-related patterns while suppressing back-ground noise, motivated by the observation that attribute-specific cues are typically localized rather than globally distributed. The refined features fA are obtained through the following operations: 
+
+𝜶 = softmax (fo′ 
+
+> I
+
+· fo′ 
+
+> 𝑎
+
+) ∈ R𝐻 ′ ×𝑊 ′
+
+, (1) 
+
+fI𝑎 =   
+
+> 𝐻 ′×𝑊 ′
+
+∑︁ 
+
+> 𝑗
+
+𝜶 𝑗 f𝑜 𝐼 𝑗 , (2) 
+
+fA = LN (W2 (relu (W1 (LN (fI𝑎 )))) + fI𝑎 ) , (3) where f𝑜 𝐼 𝑗 is the 𝑗 -th channel-aware feature vector of f𝑜 𝐼 , LN denotes layer normalization, and W1 and W2 are trainable weights. WWW ’26, April 13–17, 2026, Dubai, United Arab Emirates Shuili Zhang, Hongzhang Mu, Wenyuan Zhang, Duohe Ma, & Tingwen Liu 
+
+3.2.2 Superpixel-level Aggregation. Following the attribute-guided attention mechanism, we crop the input image 𝐼 to obtain 𝐼 𝑐 , from which we extract image features fI ∈ R𝐷 I ×𝐻 ×𝑊 for superpixel token generation. Inspired by SuiT [ 17 ], we propose superpixel feature ag-gregation into the tokenization process. To preserve high-frequency details, we adopt a superpixel-based positional encoding scheme. Specifically, sinusoidal positional encoding with learnable frequen-cies [ 26 ] is applied, yielding positional features fP ∈ R𝐷 P ×𝐻 ×𝑊 for each spatial location (ℎ, 𝑤 ) as: 
+
+f (ℎ,𝑤 ) 
+
+> P
+
+[2𝑞 ] = sin (𝑔 𝑥 [𝑞 ] · ℎ + 𝑔 𝑦 [𝑞 ] · 𝑤 ), (4) 
+
+f (ℎ,𝑤 ) 
+
+> P
+
+[2𝑞 + 1] = cos (𝑔 𝑥 [𝑞 ] · ℎ + 𝑔 𝑦 [𝑞 ] · 𝑤 ), (5) where 𝑔 𝑥 [𝑞 ] and 𝑔 𝑦 [𝑞 ] represent learnable frequencies along the horizontal and vertical axes for the 𝑞 -th dimension. We then com-bine the attribute-related image features fI and positional features 
+
+fP through channel-wise concatenation and linear projection: 
+
+fIP = [fI ⊕ fP]WIP , fIP ∈ R 𝐷    
+
+> 2×𝐻 ×𝑊
+
+, (6) where WIP ∈ R(𝐷 I+𝐷 P ) × 𝐷  
+
+> 2
+
+denotes the projection matrix, and ⊕ rep-resents concatenation. Given the superpixel index map 𝑔 𝑠 obtained from the FastSLIC algorithm [ 2 , 24 ] applied to the cropped image 𝐼 𝑐 ,pixel-level embeddings within each superpixel 𝐶 𝑘 are aggregated using a dual-pooling strategy, through average and max pooling: 
+
+f𝑘  
+
+> avg
+
+= 1
+
+|𝐶 𝑘 |∑︁ 𝑥 (ℎ,𝑤 ) ∈𝐶 𝑘 
+
+f (ℎ,𝑤 ) 
+
+> IP
+
+, (7) 
+
+f𝑘  
+
+> max
+
+= max   
+
+> 𝑥 (ℎ,𝑤 )∈𝐶 𝑘
+
+f (ℎ,𝑤 ) 
+
+> IP
+
+, (8) where |𝐶 𝑘 | denotes the number of pixels in superpixel 𝐶 𝑘 . The final superpixel embedding combines the results of the dual-pooling: 
+
+f𝑘 𝑠 = f𝑘  
+
+> avg
+
+⊕ f𝑘 
+
+> max
+
+. (9) This dual-pooling strategy enables the superpixel embeddings to capture both global context and prominent local details. 
+
+## 3.3 Superpixel Token-based Transformer 
+
+Building upon the extracted superpixel tokens f𝑠 = [f1 
+
+> 𝑠
+
+, f2 
+
+> 𝑠
+
+, . . . , f𝑛 𝑠 ],where f𝑖 𝑠 ∈ R𝐷 denotes the embedding of the 𝑖 -th token and 𝑛 is the total number of superpixel tokens, we employ a superpixel token-based Transformer module to capture attribute-aware fea-tures under attribute guidance. This module incorporates modality-specific embeddings [e𝑎 , e𝑠 ] to differentiate attribute tokens from visual tokens, encoding modality-specific information into their respective spaces, as formalized by the following equations: 
+
+f′ 
+
+> 𝑎
+
+= FC (f𝑎 ) + e𝑎 , (10) 
+
+f′ 
+
+> 𝑠
+
+= [f1 
+
+> 𝑠
+
++ e𝑠 , f2 
+
+> 𝑠
+
++ e𝑠 , . . . , f𝑛 𝑠 + e𝑠 ]. (11) Here, a learnable fully connected (FC) layer is used to project the attribute embeddings, explicitly ensuring their dimensionality is properly aligned with that of the superpixel token embeddings. Leveraging the multi-head self-attention mechanism in Transform-ers [ 29 ], we adopt an adapted architecture in which the attribute embedding f′ 
+
+> 𝑎
+
+explicitly serves as the query, while the superpixel token embedding f′ 
+
+> 𝑠
+
+simultaneously provides the corresponding key and value for each attention head. Scaled dot-product attention is then used to compute query-key affinities, enabling dynamic aggregation of attribute-aware superpixel features. Formally, the attentive representation f𝑖 𝑎𝑠 ∈ R𝑑 at the 𝑖 -th head is defined as: 
+
+f𝑖 𝑎𝑠 = softmax 
+
+ QK 𝑇 
+
+√𝑑 
+
+
+
+V, (12) where Q = f′ 
+
+> 𝑎
+
+W𝑞 𝑖 , K = f′ 
+
+> 𝑠
+
+W𝑘 𝑖 , and V = f′ 
+
+> 𝑠
+
+W𝑣 𝑖 , with W𝑞 𝑖 , W𝑘 𝑖 , W𝑣 𝑖 ∈
+
+R𝐷 ×𝑑 denoting the respective projection matrices for the query, key, and value. After computing all ℎ attention heads, their outputs are concatenated and passed through a final output projection layer to obtain the resulting attribute-aware representation: 
+
+f𝑎𝑠 = [f1 
+
+> 𝑎𝑠
+
+⊕ f2 
+
+> 𝑎𝑠
+
+⊕ · · · ⊕ fℎ𝑎𝑠 ]W3, (13) where W3 ∈ Rℎ𝑑 ×𝐷 denotes the output projection matrix. Following the standard Transformer architecture [ 29 ], we augment f𝑎𝑠 with an explicit residual connection by adding the mean-pooled superpixel token embeddings f′ 
+
+> 𝑠
+
+. A subsequent multilayer perceptron (MLP) with residual connection and layer normalization is then applied to reliably generate the final attribute-aware image representation 
+
+fT ∈ R𝑐 , which constitutes the output of the framework. 
+
+## 3.4 Training and Inference 
+
+The primary objective of training is to learn robust and discrimina-tive attribute-aware representations, such that images sharing the same attribute values are represented with high similarity, while those with differing attribute values are explicitly and distinctly separated. To achieve this, we adopt a contrastive learning strategy incorporating both triplet loss and cross-InfoNCE loss. Specifically, we construct a triplet set B = {( 𝐼 𝑖 , 𝐼 + 
+
+> 𝑖
+
+, 𝐼 − 
+
+> 𝑖
+
+)} 𝑁 𝑖 =1, where 𝐼 𝑖 and 𝐼 + 
+
+> 𝑖
+
+share the same value with respect to the attribute 𝑎 , whereas 𝐼 − 
+
+> 𝑖
+
+exhibits a different value. Here, 𝑁 denotes the mini-batch size. The attribute-related representation f𝑖  
+
+> A
+
+and the attribute-aware representation 
+
+f𝑖  
+
+> T
+
+are learned separately via triplet ranking loss [ 21 , 30 ]. Formally, for a given mini-batch, the triplet loss is defined as: 
+
+LA = 1
+
+𝑁 
+
+> 𝑁
+
+∑︁ 
+
+> 𝑖 =1
+
+max (0, 𝑚 − 𝑠 (f𝑖 
+
+> A
+
+, f𝑖 + 
+
+> A
+
+) + 𝑠 (f𝑖 
+
+> A
+
+, f𝑖 − 
+
+> A
+
+)) ,
+
+LT = 1
+
+𝑁 
+
+> 𝑁
+
+∑︁ 
+
+> 𝑖 =1
+
+max (0, 𝑚 − 𝑠 (f𝑖 
+
+> T
+
+, f𝑖 + 
+
+> T
+
+) + 𝑠 (f𝑖 
+
+> T
+
+, f𝑖 − 
+
+> T
+
+)) .
+
+(14) Here, LA denotes the loss for attribute-guided attention, while LT
+
+corresponds to the loss for the superpixel token-based Transformer. 
+
+f𝑖 
+
+> T
+
+, f𝑖 + 
+
+> T
+
+, and f𝑖 − 
+
+> T
+
+represent the final attribute-aware representations of the 𝑖 -th triplet 𝐼 𝑖 , 𝐼 + 
+
+> 𝑖
+
+, and 𝐼 − 
+
+> 𝑖
+
+generated by Super Fashion. Similarly, 
+
+f𝑖 
+
+> A
+
+, f𝑖 + 
+
+> A
+
+, and f𝑖 − 
+
+> A
+
+denote the corresponding attribute-related feature representations of the same triplet obtained from the attribute-guided attention module. The similarity function 𝑠 (· , ·) is imple-mented as cosine similarity, and the margin hyperparameter 𝑚 
+
+enforces a minimum separation between positive and negative pairs. In addition, considering that attribute-related and attribute-aware features may share certain meaningful similarities yet also exhibit subtle differences, we aim to learn joint discriminative rep-resentations effectively from them. To this end, we propose a novel cross-InfoNCE loss LAT to carefully align these two types of rep-resentations through cross-modal learning, formulated as follows: Beyond Patches: Superpixel Token-based Transformers for Attribute-Specific Fashion Retrieval WWW ’26, April 13–17, 2026, Dubai, United Arab Emirates 
+
+Table 1: Comparative results (%) on FashionAI dataset across each attribute and overall MAP metrics. Domain Method MAP for each attribute Overall MAP skirt sleeve coat pant collar lapel neckline neck length length length length design design design design 
+
+Prior SOTA 
+
+CSN [30] 61.97 45.06 47.30 62.85 69.83 54.14 46.56 54.47 53.52 ASEN [21] 64.44 54.63 51.27 63.53 70.79 65.36 59.50 58.67 61.02 HAEN [35] 64.13 55.52 56.41 72.31 73.32 69.22 62.41 59.80 64.13 AttnFashion [31] 65.70 56.46 54.64 71.12 74.45 69.36 65.69 65.54 65.37 ISLN [36] 65.91 58.83 56.45 71.22 74.53 70.55 65.71 65.61 66.10 ASEN++ [5] 66.34 57.53 55.51 68.77 72.94 66.95 66.81 67.01 64.31 RPF [6] 66.75 67.84 59.59 73.14 75.72 73.18 74.40 74.98 70.10 
+
+SOTA-KD 
+
+ASEN_V2+PKD [32] 69.28 62.13 59.72 73.08 80.11 74.08 68.98 70.04 68.48 ASEN_V2+PT+PKD [32] 68.94 62.13 60.88 73.56 78.20 77.77 69.94 69.32 69.14 ASEN+GeoDCL [33] 65.20 53.95 50.42 67.10 76.32 70.47 64.60 67.55 62.81 ASEN_V2+GeoDCL[33] 68.71 59.18 55.54 70.72 77.14 73.03 68.49 69.25 66.48 RPF+GeoDCL [33] 69.96 68.70 61.05 73.96 78.34 77.19 70.72 80.01 71.15 
+
+Ours Super Fashion 70.48 69.57 61.90 74.06 79.82 78.12 70.39 80.19 72.46 Table 2: Comparative results (%) on DARN dataset across each attribute and overall MAP metrics. Domain Method MAP for each attribute Overall MAP clothes clothes clothes clothes clothes clothes collar sleeve sleeve category button color length pattern shape shape length shape 
+
+Prior SOTA 
+
+CSN [30] 34.10 44.32 47.38 53.68 54.09 56.32 31.82 78.05 58.76 50.86 ASEN [21] 36.69 46.96 51.35 56.47 54.49 60.02 34.18 80.11 60.04 53.31 HAEN [35] 32.10 47.04 45.03 48.27 49.92 51.22 28.05 78.29 58.47 48.70 AttnFashion [31] 34.94 48.56 48.14 54.47 52.65 56.36 32.32 82.63 60.77 52.32 ISLN [36] 38.84 51.26 52.67 56.55 53.85 58.34 36.64 82.74 61.28 54.68 ASEN++ [5] 40.15 50.42 53.78 60.38 57.39 59.88 37.65 83.91 60.70 55.94 RPF [6] 44.60 55.30 54.02 63.85 56.91 60.15 38.70 84.57 59.35 56.88 
+
+Ours Super Fashion 48.66 58.10 57.52 69.80 57.86 64.51 39.10 86.77 62.53 62.15 
+
+LAT = − 1
+
+𝑁 
+
+> 𝑁
+
+∑︁ 
+
+> 𝑖 =1
+
+log 
+
+ Z+
+
+Z+ + Z −
+
+
+
+, (15) where P and N denote the positive and negative sets of the repre-sentations that share or differ in attribute values with 𝐼 𝑖 , respectively. The partition functions Z+ and Z− are defined as follows: 
+
+Z+ = exp (f𝑖  
+
+> T
+
+· f𝑖 
+
+> A
+
+/𝜏 ) + ∑︁    
+
+> f𝑗 +
+> A∈ P
+
+exp (f𝑖  
+
+> T
+
+· f 𝑗 + 
+
+> A
+
+/𝜏 ),
+
+Z− =∑︁    
+
+> f𝑗 −
+> A∈ N
+
+exp (f𝑖  
+
+> T
+
+· f 𝑗 − 
+
+> A
+
+/𝜏 ). (16) Consequently, the final overall loss function is expressed as: 
+
+L = LA + 𝛼 LT + 𝛽 LAT , (17) where 𝛼 and 𝛽 are training hyperparameters that balance the con-tributions of the respective loss components. During inference, the similarity between a query image 𝐼 and a candidate image 𝐼 ∗ with respect to a specific attribute is computed as: sim (𝐼, 𝐼 ∗) = 𝜆𝑠 (fA, f∗
+
+> A
+
+) + ( 1 − 𝜆 )𝑠 (fT, f∗
+
+> T
+
+), (18) where 𝜆 is a weighting hyperparameter used during inference, and 
+
+𝑠 (· , ·) denotes the similarity function, such as cosine similarity. 
+
+## 4 Experiment 4.1 Experimental Setup 
+
+4.1.1 Datasets. To ensure a fair and rigorous comparison, follow-ing prior studies [ 5 , 6, 13 , 21 , 33 ], we evaluate our proposed frame-work Super Fashion on three widely used benchmark datasets: Fash-ionAI [ 42 ], DeepFashion [ 20 ], and DARN [12 ]. The dataset partition-ing and preprocessing procedures are kept consistent with those adopted in previous works. It is worth noting that images in the 
+
+DeepFashion dataset are annotated with multiple attributes, whereas both the DARN and FashionAI datasets provide a single-attribute label for each image. 
+
+4.1.2 Baseline Models. We compare our framework with a com-prehensive set of representative SOTA methods that have been WWW ’26, April 13–17, 2026, Dubai, United Arab Emirates Shuili Zhang, Hongzhang Mu, Wenyuan Zhang, Duohe Ma, & Tingwen Liu 
+
+Table 3: Comparative results (%) on DeepFashion dataset across each attribute and overall MAP metrics. Domain Method MAP for each attribute Overall MAP 
+
+texture fabric shape part style 
+
+Prior SOTA 
+
+CSN [30] 14.09 6.39 11.07 5.13 3.49 8.01 ASEN [21] 15.01 7.32 13.32 6.27 3.85 9.14 AttnFashion [31] 12.90 6.34 11.38 5.24 4.20 8.01 ASEN++ [5] 15.60 7.67 14.31 6.60 4.07 9.64 RPF [6] 15.62 8.30 15.02 7.38 4.77 10.22 
+
+SOTA-KD 
+
+ASEN+GeoDCL [33] 16.09 7.84 12.80 6.27 5.25 9.41 ASEN_V2+GeoDCL [33] 15.29 7.11 11.77 5.52 3.76 8.68 RPF+GeoDCL [33] 16.69 8.95 15.47 8.02 5.19 10.80 
+
+Ours Super Fashion 17.62 9.90 16.37 8.07 5.69 11.81 Table 4: Cross-dataset evaluation results and performance for FashionAI → DARN and DARN → FashionAI settings. The notation S → T denotes training on dataset S and testing on dataset T. Italicized results indicate in-dataset training and testing. Method FashionAI → DARN DARN → FashionAI 
+
+sleeve length clothes length collar shape Overall MAP sleeve length coat length neckline design Overall MAP 
+
+ASEN [21] 65.63 43.67 24.08 37.46 29.36 25.08 16.86 23.35 ASEN++ [5] 65.68 44.35 24.08 38.05 30.56 26.08 17.26 24.31 RPF [6] 66.14 44.87 23.62 38.81 34.93 27.96 20.89 26.09 
+
+Super Fashion 86.77 69.80 39.10 64.80 69.57 61.90 70.39 63.31 
+
+67.55 46.76 27.30 41.57 38.51 30.84 23.41 29.47 
+
+previously introduced and discussed in Sec. 2. These baselines en-compass both earlier and more recent studies, including CSN [ 30 ], ASEN [ 21 ], HAEN [ 35 ], ISLN [ 36 ], ASEN++ [ 5], AttnFashion [ 31 ], and RPF [ 6]. In addition to these foundations, we also incorporate more advanced frameworks such as GeoDC L [ 33 ], which enhances knowledge distillation by enforcing geometric consistency on prior SOTA models, and PKD [ 32 ], which leverages progressive knowl-edge disentanglement to further improve existing approaches. 
+
+4.1.3 Implementation Details. Consistent with prior works [ 5 , 6,13 , 21 , 33 ], we employ mean average precision (MAP) as the evalua-tion metric across all datasets, reporting MAP for each attribute as well as the overall MAP. For the Transformer, we employ ViT-B/16 network pre-trained on ImageNet and employ ResNet50 pre-trained on ImageNet as the local feature encoder, owing to its effectiveness in capturing spatial structural information from images. Each at-tribute is represented as a one-hot ID and mapped to a learnable embedding that guides visual feature extraction, following common practice in ASFR. The training procedure consists of two stages, consistent with [5]: (1) The initial learning rate is set to 1 × 10 −4 and decays by a factor of 0.3 every three epochs, for a total of 50 epochs. (2) The learning rate is then reduced to 1 × 10 −5 and decays by a factor of 0.95 at each epoch, for an additional 50 epochs. We set the hyperparameters as follows: 𝑚 = 0.2 for Eq. (14), 𝜏 = 0.07 
+
+for Eq. (16), while 𝛼 = 0.1 and 𝛽 = 0.04 are used in Eq. (17), and finally, 𝜆 = 0.3 is applied in Eq. (18) for all cases as well. 
+
+## 4.2 Main Experimental Results and Analysis 
+
+4.2.1 Comparison to Baseline Models. Overall, the comparison with baseline models demonstrates that Super Fashion establishes new SOTA performance, delivering consistent and substantial im-provements across multiple datasets for ASFR tasks. The gains are largely attributed to the integration of innovative superpixel seg-mentation with a superpixel token-based Transformer architecture. As summarized in Tables 1–3, Super Fashion consistently and significantly outperforms prior SOTA methods by a substantial margin in terms of overall MAP. Specifically, on the FashionAI and DeepFashion datasets, it achieves relative increases of 1.84% and 
+
+9.35% , respectively, compared with the previous leading method RPF+GeoDCL [ 33 ]. Moreover, on the DARN dataset, it substantially surpasses the previous SOTA approach RPF [ 6] by a relative margin of 9.27% , further demonstrating the framework’s superior attribute-specific fashion retrieval capability and robust generalization. In addition to its overall performance, Super Fashion exhibits notable advantages in fine-grained attribute-specific fashion re-trieval across heterogeneous feature distributions. For instance, on the DeepFashion dataset, the texture and fabric attributes show relative improvements of 5.57% and 10.61% , respectively, Beyond Patches: Superpixel Token-based Transformers for Attribute-Specific Fashion Retrieval WWW ’26, April 13–17, 2026, Dubai, United Arab Emirates 
+
+Table 5: Computational time efficiency comparison on FashionAI, DARN, and DeepFashion datasets. Dataset Method Avg Time ( 𝑠 / image) Avg Time ( 𝜇𝑠 / image pair) Throughput (QPS) FashionAI RPF 0.275 19.10 3.64 
+
+Super Fashion 0.306 21.25 3.27 
+
+DARN RPF 0.200 22.09 5.00 
+
+Super Fashion 0.220 24.30 4.55 
+
+DeepFashion RPF 0.105 4.75 9.52 
+
+Super Fashion 0.121 5.48 8.26 
+
+Table 6: Ablation results for the different contributions of 
+
+Super Fashion’s key components on DeepFashion dataset. Method MAP for each attribute Overall MAP texture fabric shape part style w/o Attention 15.22 8.57 15.28 7.61 4.23 10.28 w/o Transformer 15.01 8.23 14.96 7.01 3.89 9.65 
+
+Super Fashion 17.62 9.90 16.37 8.07 5.69 11.81 
+
+over the previous SOTA RPF+GeoDCL [ 33 ], highlighting the frame-work’s capability to capture intricate micro-structural patterns. These improvements are further emphasized by the observed ability of Super Fashion to handle diverse and challenging attribute varia-tions in fashion data. Similarly, on the DARN dataset, the clothes category and clothes button attributes experience gains of 
+
+9.10% and 5.06% , respectively, compared to RPF [ 6]. Additionally, on DARN dataset, Super Fashion achieves relative improvements of 
+
+6.48% and 9.32% on the clothes color and clothes length at-tributes, respectively, underscoring its robustness and versatility in capturing discriminative features of local attributes. This consistent trend of improvement across different datasets demonstrates the framework’s broad applicability to various fashion-related tasks. 
+
+4.2.2 Cross-Dataset Generalization. Super Fashion exhibits robust cross-dataset knowledge transfer and generalization capabilities. To evaluate this property, we assess its performance on corre-sponding attributes across the DARN and FashionAI datasets, de-spite differences in attribute values. In this setting, the attributes 
+
+sleeve length , coat length , and neckline design in the Fash-ionAI dataset correspond to sleeve length , clothes length , and 
+
+collar shape in the DARN dataset, respectively. As shown in Ta-ble 4, Super Fashion consistently and significantly outperforms the previous SOTA method RPF [ 6 ] in cross-dataset transfers, achieving relative improvements in overall MAP of 7.11% when transferring from FashionAI to DARN, and 12.96% when transferring from DARN to FashionAI. These results clearly underscore the frame-work’s superior knowledge transfer capability and its exceptional generalization performance across heterogeneous datasets. 
+
+## 4.3 Time Efficiency Analysis 
+
+The throughput of Super Fashion experiences a slight reduction compared to RPF [ 6 ], but this decrease is minor when weighed against the substantial performance gains. We conduct a detailed 
+
+Table 7: Ablation results on three datasets for the choice of key component across the overall MAP evaluation metric. Method FashionAI DARN DeepFashion 
+
+Patch Token 70.05 56.93 10.24 SLIC 71.89 61.47 11.01 
+
+Super Fashion 72.46 62.15 11.81 
+
+evaluation of Super Fashion’s computational time efficiency, as sum-marized in Table 5. Specifically, the framework exhibits a modest throughput decrease of 0.37 QPS, 0.45 QPS, and 0.26 QPS on the FashionAI, DARN, and DeepFashion datasets compared with RPF [6 ], respectively. This reduction arises primarily from the additional computational overhead incurred by superpixel generation during inference. Importantly, these costs are more than compensated by notable improvements in overall MAP, with relative gains of 3.37%, 9.27%, and 15.56% across the same datasets over RPF. These results indicate that Super Fashion achieves a favorable balance between computational efficiency and retrieval performance, demonstrating its practicality and effectiveness for real-world ASFR tasks. 
+
+## 4.4 Ablation Study 
+
+4.4.1 Effect of Key Component. Table 6 illustrates the performance variations of our framework when key components, namely the attribute-guided attention mechanism or the superpixel token-based Transformer, are removed. Ablation of either component results in a substantial performance decline. Notably, the removal of the superpixel token-based Transformer leads to the most sig-nificant drop, as it impairs the framework’s ability to effectively capture fine-grained, micro-structural attribute patterns. 
+
+4.4.2 Choice of Key Component. As presented in Table 7, replacing superpixel tokens with conventional 16 × 16 patch tokens, as uti-lized in RPF [ 6], results in a substantial performance decline, with relative reductions in overall MAP of 3.33% , 8.40% , and 13.29% 
+
+across FashionAI, DARN, and DeepFashion datasets, yielding an overall MAP only marginally above that of RPF [ 6]. In contrast, substituting the superpixel generation algorithm with SLIC [ 2] in-duces only minor performance variations. While employing more sophisticated superpixel generation algorithms or models could potentially enhance performance further, resource constraints must be taken into account. WWW ’26, April 13–17, 2026, Dubai, United Arab Emirates Shuili Zhang, Hongzhang Mu, Wenyuan Zhang, Duohe Ma, & Tingwen Liu 
+
+Figure 3: Overall MAP vs. superpixel tokens and hyperparameters 𝛼, 𝛽, 𝜆 on the DeepFashion dataset. part( batwing )     
+
+> Image Attribute Query:
+> Top -5 images retrieved of RPF
+> blouse blouse dress
+> Image Reranking with Super Fashion
+> blouse blouse dress
+
+Figure 4: Retrieval case with incorrect retrievals highlighted. 
+
+4.4.3 Impact of Superpixel Token Count. Figure 3 (a) depicts the influence of varying superpixel token counts on the performance of Super Fashion. As the number of superpixel tokens increases, the framework exhibits a consistent and notable performance enhance-ment. This improvement is likely attributable to the framework’s en-hanced capability to capture intricate, fine-grained micro-structural patterns of attributes with higher token counts. 
+
+## 4.5 Hyperparameter Analysis 
+
+We conduct an study on the DeepFashion dataset to assess the impact of hyperparameters 𝛼 , 𝛽 , and 𝜆 , with results shown in Fig-ure 3 (b)-(d). The results reveal that 𝛼 and 𝛽 show low sensitivity over the ranges 0.05-0.25 and 0.01-0.05, respectively, while 𝜆 is highly sensitive, with MAP peaking at 𝜆 = 0.3. The parameter 
+
+𝜆 balances attribute-related and attribute-aware features during inference, with optimal performance observed for 𝜆 in the range 0.0–0.5, outperforming 𝜆 values of 0.6–1.0. This is attributed to the Superpixel Token-based Transformer, which enhances fine-grained attribute feature learning after noise-irrelevant features are filtered by attribute-guided attention. Notably, performance at 𝜆 = 0 sur-passes that at 𝜆 = 1, reinforcing the effectiveness of the superpixel token-based Transformer, consistent with ablation study results. 
+
+## 4.6 Case Study 
+
+4.6.1 Retrieval Case. We present example cases of the ASFR task, comparing Super Fashion with the baseline RPF [ 6 ]. For each query image and specified attribute, the top five retrieved images are dis-played. As shown in Figure 4, Super Fashion effectively captures subtle, fine-grained attribute differences, whereas RPF often pro-duces mismatches. 
+
+4.6.2 Visualization Analysis. Figure 5 presents visualization ex-amples of attribute-based superpixel segmentation results. For the attributes skirt length , neckline design , and pant length , the segmentation highlights the relevant attribute-specific features and structures. These results provide robust support for Super Fashion’s ability to extract superpixel tokens for effective training. Attribute : skirt length   
+
+> Value :knee length
+> Attribute : neckline design
+> Value : deep V neckline
+> Attribute : pant length
+> Value : cropped pant
+
+Figure 5: Attribute-based superpixel segmentation map. 
+
+## 5 Conclusion 
+
+In this paper, we propose Super Fashion, a novel framework for attribute-specific fashion retrieval. The framework first extracts attribute-related features to guide the cropping of meaningful image regions, and then generates compact, semantically coherent super-pixel tokens, which are subsequently aggregated and processed by a superpixel token-based Transformer for adaptive feature interac-tion and feature fusion. Extensive experiments on multiple datasets clearly demonstrate that Super Fashion effectively captures fine-grained attribute microstructures, mitigates background noise, and significantly outperforms existing SOTA methods. The results high-light the critical importance of semantically coherent tokenization for enhancing attribute-specific retrieval. For future work, we plan to explore attribute-guided superpixel segmentation, leveraging pre-trained attribute recognition models to provide semantic cues for precise alignment with attribute boundaries, thereby producing purer, more discriminative features and extending the framework to Web-based attribute-related retrieval across different domains. Beyond Patches: Superpixel Token-based Transformers for Attribute-Specific Fashion Retrieval WWW ’26, April 13–17, 2026, Dubai, United Arab Emirates 
+
+## 6 Acknowledgments 
+
+This work was supported by the National Natural Science Founda-tion of China (Nos. 62406319, 62572465) and the Youth Innovation Promotion Association of CAS (No.2021153). 
+
+## References 
+
+[1] Marius Aasan, Odd Kolbjørnsen, Anne Schistad Solberg, and Adín Ramírez Rivera. 2024. A Spitting Image: Modular Superpixel Tokenization in Vision Transformers. In European Conference on Computer Vision . Springer, Cham, Switzerland, 124– 142. [2] Radhakrishna Achanta, Appu Shaji, Kevin Smith, Aurelien Lucchi, Pascal Fua, and Sabine Süsstrunk. 2012. SLIC Superpixels Compared to State-of-the-Art Su-perpixel Methods. IEEE Transactions on Pattern Analysis and Machine Intelligence 
+
+34, 11 (2012), 2274–2282. [3] Isabela Borlido Barcelos, Felipe De Castro Belém, Leonardo De Melo João, Ze-nilton KG Do Patrocínio Jr, Alexandre Xavier Falcão, and Silvio Jamil Ferzoli Guimarães. 2024. A Comprehensive Review and New Taxonomy on Superpixel Segmentation. Comput. Surveys 56, 8 (2024), 1–39. [4] Antonio D’Innocente, Nikhil Garg, Yuan Zhang, Loris Bazzani, and Michael Donoser. 2021. Localized Triplet Loss for Fine-Grained Fashion Image Retrieval. In 
+
+Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition .3910–3915. [5] Jianfeng Dong, Zhe Ma, Xiaofeng Mao, Xun Yang, Yuan He, Richang Hong, and Shouling Ji. 2021. Fine-Grained Fashion Similarity Prediction by Attribute-Specific Embedding Learning. IEEE Transactions on Image Processing 30 (2021), 8410–8425. [6] Jianfeng Dong, Xiaoman Peng, Zhe Ma, Daizong Liu, Xiaoye Qu, Xun Yang, Jixiang Zhu, and Baolong Liu. 2023. From Region to Patch: Attribute-Aware Foreground-Background Contrastive Learning for Fine-Grained Fashion Re-trieval. In Proceedings of the 46th International ACM SIGIR Conference on Research and Development in Information Retrieval . 1273–1282. [7] Garas Gendy, Guanghui He, and Nabil Sabor. 2023. Lightweight Image Super-Resolution Based on Deep Learning: State-of-the-Art and Future Directions. 
+
+Information Fusion 94 (2023), 284–310. [8] Xiaoling Gu, Yongkang Wong, Lidan Shou, Pai Peng, Gang Chen, and Mohan S. Kankanhalli. 2019. Multi-Modal and Multi-Domain Embedding Learning for Fashion Retrieval and Analysis. IEEE Transactions on Multimedia 21, 6 (2019), 1524–1537. [9] Yunpeng Han, Lisai Zhang, Qingcai Chen, Zhijian Chen, Zhonghua Li, Jianxin Yang, and Zhao Cao. 2023. FashionSAP: Symbols and Attributes Prompt for Fine-Grained Fashion Vision-Language Pre-Training. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition . 15028–15038. [10] Philippe Hansen-Estruch, David Yan, Ching-Yao Chuang, Orr Zohar, Jialiang Wang, Tingbo Hou, Tao Xu, Sriram Vishwanath, Peter Vajda, and Xinlei Chen. 2025. Learnings from Scaling Visual Tokenizers for Reconstruction and Genera-tion. In Proceedings of the 42nd International Conference on Machine Learning .[11] Jakob Drachmann Havtorn, Amélie Royer, Tijmen Blankevoort, and Babak Eht-eshami Bejnordi. 2023. MSViT: Dynamic Mixed-scale Tokenization for Vision Transformers. In Proceedings of the IEEE/CVF International Conference on Com-puter Vision . 838–848. [12] Junshi Huang, Rogerio S. Feris, Qiang Chen, and Shuicheng Yan. 2015. Cross-Domain Image Retrieval with a Dual Attribute-Aware Ranking Network. In 
+
+Proceedings of the IEEE International Conference on Computer Vision . 1062–1070. [13] Yang Jiao, Yan Gao, Jingjing Meng, Jin Shang, and Yi Sun. 2023. Learning Attribute and Class-Specific Representation Duet for Fine-Grained Fashion Analysis. In 
+
+2023 IEEE/CVF Conference on Computer Vision and Pattern Recognition . 11050– 11059. [14] Yang Jiao, Ning Xie, Yan Gao, Chien-chih Wang, and Yi Sun. 2022. Fine-Grained Fashion Representation Learning by Online Deep Clustering. In Uropean Confer-ence on Computer Vision . 19–35. [15] Sangtae Kim, Daeyoung Park, and Byonghyo Shim. 2023. Semantic-Aware Super-pixel for Weakly Supervised Semantic Segmentation. In Proceedings of the AAAI Conference on Artificial Intelligence , Vol. 37. 1142–1150. [16] Suha Kwak, Seunghoon Hong, and Bohyung Han. 2017. Weakly Supervised Semantic Segmentation Using Superpixel Pooling Network. In Proceedings of the AAAI Conference on Artificial Intelligence , Vol. 31. 4111–4117. [17] Jaihyun Lew, Soohyuk Jang, Jaehoon Lee, Seungryong Yoo, Eunji Kim, Saehyung Lee, Jisoo Mok, Siwon Kim, and Sungroh Yoon. 2025. Superpixel Tokeniza-tion for Vision Transformers: Preserving Semantic Integrity in Visual Tokens. arXiv:2412.04680 [18] An-An Liu, Ting Zhang, Dan Song, Wenhui Li, and Ming Zhou. 2021. FRSFN: A Semantic Fusion Network for Practical Fashion Retrieval. Multimedia Tools and Applications 80 (2021), 17169–17181. [19] Ze Liu, Yutong Lin, Yue Cao, Han Hu, Yixuan Wei, Zheng Zhang, Stephen Lin, and Baining Guo. 2021. Swin Transformer: Hierarchical Vision Transformer Using Shifted Windows. In Proceedings of the IEEE/CVF International Conference on Computer Vision . 10012–10022. [20] Ziwei Liu, Ping Luo, Shi Qiu, Xiaogang Wang, and Xiaoou Tang. 2016. DeepFash-ion: Powering Robust Clothes Recognition and Retrieval with Rich Annotations. In Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition .1096–1104. [21] Zhe Ma, Jianfeng Dong, Zhongzi Long, Yao Zhang, Yuan He, Hui Xue, and Shoul-ing Ji. 2020. Fine-Grained Fashion Similarity Learning by Attribute-Specific Embedding Network. In Proceedings of the AAAI Conference on Artificial Intelli-gence . 11741–11748. [22] Tomer Ronen, Omer Levy, and Avram Golbert. 2023. Vision Transformers with Mixed-resolution Tokenization. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition . 4613–4622. [23] Ronghua Shang, Jiyu Zhang, Licheng Jiao, Yangyang Li, Naresh Marturi, and Rustam Stolkin. 2020. Multi-Scale Adaptive Feature Fusion Network for Semantic Segmentation in Remote Sensing Images. Remote Sensing 12, 5 (2020), 872. [24] Jianbing Shen, Xiaopeng Hao, Zhiyuan Liang, Yu Liu, Wenguan Wang, and Ling Shao. 2016. Real-time superpixel segmentation by DBSCAN clustering algorithm. 
+
+IEEE Transactions on Image Processing 25, 12 (2016), 5933–5942. [25] Chull Hwan Song and Hye Joo Han. 2022. Convolutional Attribute Mask with Two-Step Attention for Fashion Image Retrieval. In Proceedings of the 2022 26th International Conference on Pattern Recognition . 2093–2099. [26] Matthew Tancik, Pratul Srinivasan, Ben Mildenhall, Sara Fridovich-Keil, Nithin Raghavan, Utkarsh Singhal, Ravi Ramamoorthi, Jonathan T Barron, and Ren Ng. 2020. Fourier features let networks learn high frequency functions in low dimensional domains. In Proceedings of the 34th Conference on Neural Information Processing Systems . 7537–7547. [27] Yuxin Tian, Shawn Newsam, and Kofi Boakye. 2023. Fashion Image Retrieval With Text Feedback by Additive Attention Compositional Learning. In Proceedings of the IEEE/CVF Winter Conference on Applications of Computer Vision . 1011–1021. [28] Son Tran, Ming Du, Sampath Chanda, R. Manmatha, and C. J. Taylor. 2019. Searching for Apparel Products from Images in the Wild. In Proceedings of the KDD 2019 Workshop on AI for Fashion .[29] Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N. Gomez, Łukasz Kaiser, and Illia Polosukhin. 2017. Attention Is All You Need. In Advances in Neural Information Processing Systems , Vol. 30. 5998– 6008. [30] Andreas Veit, Serge Belongie, and Theofanis Karaletsos. 2017. Conditional Similar-ity Networks. In 2017 IEEE Conference on Computer Vision and Pattern Recognition .1781–1789. [31] Yongquan Wan, Kang Yan, Cairong Yan, and Bofeng Zhang. 2024. Learning Attribute-Guided Fashion Similarity with Spatial and Channel Attention. Journal of Experimental & Theoretical Artificial Intelligence 36, 5 (2024), 703–719. [32] Ling Xiao and Toshihiko Yamasaki. 2024. Boosting Fine-grained Fashion Retrieval with Relational Knowledge Distillation. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition . 8229–8234. [33] Ling Xiao and Toshihiko Yamasaki. 2025. GeoDCL: Weak Geometrical Distortion Based Contrastive Learning for Fine-Grained Fashion Image Retrieval. IEEE Transactions on Artificial Intelligence 6, 3 (2025), 1234–1245. [34] Zhenwei Xie, Bing Wang, Zhanqiang Liu, Liping Jiang, and Yang Liu. 2025. A Novel Superpixel Segmentation Method Based on Adaptive Seed Expansion Random Walk Algorithm for Complex Scene Images. IEEE Transactions on Instrumentation and Measurement 74 (2025), 1–12. [35] Cairong Yan, Anan Ding, Yanting Zhang, and Zijian Wang. 2021. Learning Fashion Similarity Based on Hierarchical Attribute Embedding. In 2021 IEEE 8th International Conference on Data Science and Advanced Analytics . IEEE, 1–8. [36] Cairong Yan, Kang Yan, Yanting Zhang, Yongquan Wan, and Dandan Zhu. 2022. Attribute-Guided Fashion Image Retrieval by Iterative Similarity Learning. In 
+
+2022 IEEE International Conference on Multimedia and Expo . 1–6. [37] Tao Yang, Yuwang Wang, Yan Lu, and Nanning Zheng. 2022. Visual Concepts Tokenization. In Advances in Neural Information Processing Systems , Vol. 35. 31571–31582. [38] Yue Yu, Yang Yang, and Kezhao Liu. 2021. Edge-Aware Superpixel Segmentation with Unsupervised Convolutional Neural Networks. In Proceedings of the 2021 IEEE International Conference on Image Processing . 1504–1508. [39] Kaiwen Zha, Lijun Yu, Alireza Fathi, David A. Ross, Cordelia Schmid, Dina Katabi, and Xiuye Gu. 2025. Language-Guided Image Tokenization for Generation. In 
+
+Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition .15713–15722. [40] Shuili Zhang, Hongzhang Mu, Tingwen Liu, Qianqian Tong, and Jiawei Sheng. 2024. MSKR: Advancing Multi-modal Structured Knowledge Representation with Synergistic Hard Negative Samples. In Proceedings of the 33rd ACM International Conference on Information and Knowledge Management, CIKM 2024, Boise, ID, USA, October 21-25, 2024 . ACM, 3207–3216. [41] Alex Zihao Zhu, Jieru Mei, Siyuan Qiao, Hang Yan, Yukun Zhu, Liang-Chieh Chen, and Henrik Kretzschmar. 2023. Superpixel Transformers for Efficient Semantic Segmentation. In Proceedings of the 2023 IEEE/RSJ International Conference on Intelligent Robots and Systems . 7651–7658. WWW ’26, April 13–17, 2026, Dubai, United Arab Emirates Shuili Zhang, Hongzhang Mu, Wenyuan Zhang, Duohe Ma, & Tingwen Liu 
+
+[42] Xingxing Zou, Xiangheng Kong, Waikeung Wong, Congde Wang, Yuguang Liu, and Yang Cao. 2019. FashionAI: A Hierarchical Dataset for Fashion Understand-ing. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition Workshops .

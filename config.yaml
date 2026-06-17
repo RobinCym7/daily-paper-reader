@@ -25,3 +25,64 @@ subscriptions:
     stage: A
     diff_threshold_pct: 15
   keyword_recall_mode: or
+  intent_profiles:
+    - tag: semantic-seg
+      description: 请帮我查找语义分割相关论文
+      enabled: true
+      paper_sources:
+        - arxiv
+        - biorxiv
+      keywords:
+        - keyword: semantic segmentation
+          keyword_cn: 语义分割
+          query: Semantic segmentation assigns a class label to each pixel in an image.
+        - keyword: image segmentation
+          keyword_cn: 图像分割
+          query: Image segmentation partitions an image into multiple segments to simplify representation.
+        - keyword: instance segmentation
+          keyword_cn: 实例分割
+          query: Instance segmentation detects and segments each object instance in an image.
+      intent_queries:
+        - query: Recent advances in semantic segmentation models and architectures
+          query_cn: 语义分割模型和架构的最新进展
+          enabled: true
+          source: manual
+          note: ''
+        - query: Datasets and benchmarks for semantic segmentation evaluation
+          query_cn: 用于语义分割评估的数据集和基准
+          enabled: true
+          source: manual
+          note: ''
+        - query: Transformer based methods for pixel level semantic labeling
+          query_cn: 基于Transformer的像素级语义标注方法
+          enabled: true
+          source: manual
+          note: ''
+      updated_at: '2026-06-17T13:04:36.862Z'
+source_backends:
+  arxiv:
+    papers_table: arxiv_papers
+    use_vector_rpc: true
+    vector_rpc: match_arxiv_papers
+    vector_rpc_exact: match_arxiv_papers_exact
+    use_bm25_rpc: true
+    bm25_rpc: match_arxiv_papers_bm25
+    sync_table: arxiv_sync_status
+    sync_success_value: success
+    schema: public
+    kind: supabase
+    enabled: true
+    url: https://lyucdwgefyfbmaiopjbk.supabase.co
+    anon_key: sb_publishable_lX-oi64Uxyd7SIVv3_w2Uw_MTOojeKq
+  biorxiv:
+    papers_table: biorxiv_papers
+    use_vector_rpc: true
+    vector_rpc: match_biorxiv_papers_exact
+    vector_rpc_exact: match_biorxiv_papers_exact
+    use_bm25_rpc: true
+    bm25_rpc: match_biorxiv_papers_bm25
+    schema: public
+    kind: supabase
+    enabled: true
+    url: https://lyucdwgefyfbmaiopjbk.supabase.co
+    anon_key: sb_publishable_lX-oi64Uxyd7SIVv3_w2Uw_MTOojeKq
